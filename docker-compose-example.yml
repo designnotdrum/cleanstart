@@ -1,0 +1,38 @@
+version: '2'
+networks:
+  app-tier:
+    driver: bridge
+services:
+  mariadb:
+    image: 'bitnami/mariadb:latest'
+    # Create a .env file that contains these values.
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - MARIADB_USER=${DBUSER}
+      - MARIADB_DATABASE=${DB}
+      - MARIADB_PASSWORD=${DBUSERPASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DBROOTPASSWORD}
+    volumes:
+      - './db-persistence:/bitnami'
+    networks:
+      - app-tier
+  myapp:
+    image: 'bitnami/node:latest'
+    command: "sh -c 'npm install && npm start'"
+    volumes:
+      - './app:/app'
+    networks:
+      - app-tier
+  nginx:
+    image: 'bitnami/nginx:latest'
+    networks:
+      - app-tier
+    volumes:
+      - './configs/vhost.conf:/bitnami/nginx/conf/vhosts/yourapp.conf:ro'
+volumes:
+  mariadb_data:
+    driver: local
+  node_data:
+    driver: local
+  nginx_data:
+    driver: local
